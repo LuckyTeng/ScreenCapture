@@ -22,6 +22,7 @@ import android.view.WindowManager;
 import android.widget.Button;
 
 import com.example.android.common.logger.Log;
+import com.example.android.screencapture.ERPConnectionFactory;
 import com.example.android.screencapture.MainActivity;
 import com.example.android.screencapture.R;
 import com.example.android.screencapture.ScreenCaptureFragment;
@@ -41,7 +42,7 @@ public class SampleTests extends ActivityInstrumentationTestCase2<MainActivity> 
     private MainActivity mTestActivity;
     private ScreenCaptureFragment mTestFragment;
     private WindowManager mWindowManager;
-    private Connection mConnection;
+
 
     public SampleTests() {
         super(MainActivity.class);
@@ -53,11 +54,8 @@ public class SampleTests extends ActivityInstrumentationTestCase2<MainActivity> 
         mTestActivity = getActivity();
         mTestFragment = (ScreenCaptureFragment)
                 mTestActivity.getSupportFragmentManager().getFragments().get(1);
-        String driver = "net.sourceforge.jtds.jdbc.Driver";
 
         mWindowManager = mTestActivity.getWindowManager();
-        Class.forName(driver);
-        mConnection = DriverManager.getConnection("jdbc:jtds:sqlserver://192.168.18.77:1433/CITest;instance=SQLEXPRESS", "lacty", "wu0g3tp6");
     }
 
     /**
@@ -66,12 +64,6 @@ public class SampleTests extends ActivityInstrumentationTestCase2<MainActivity> 
     public void testPreconditions() {
         assertNotNull("mTestActivity is null", mTestActivity);
         assertNotNull("mTestFragment is null", mTestFragment);
-
-        try {
-            Date d = mConnection.prepareCall("select getdate()").getDate(0);
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
     }
 
     public void testButtonToggle() throws Throwable {
@@ -82,6 +74,7 @@ public class SampleTests extends ActivityInstrumentationTestCase2<MainActivity> 
     }
 
     public void testJDBC() throws  Throwable {
+        Connection mConnection = ERPConnectionFactory.GetConnection();
         DatabaseMetaData dbm = mConnection.getMetaData();
         ResultSet rs = null;
         rs = dbm.getTables(null, null, "%", new String[] { "TABLE" });
