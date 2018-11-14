@@ -33,6 +33,8 @@ import java.sql.Date;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
+
 
 /**
  * Tests for ScreenCapture sample.
@@ -66,20 +68,23 @@ public class SampleTests extends ActivityInstrumentationTestCase2<MainActivity> 
         assertNotNull("mTestFragment is null", mTestFragment);
     }
 
-    public void testButtonToggle() throws Throwable {
+    public void testButtonToggle() {
         final View view = mTestFragment.getView();
         assertNotNull(view);
-        final Button buttonToggle = (Button) view.findViewById(R.id.toggle);
+        final Button buttonToggle = view.findViewById(R.id.toggle);
         assertNotNull(buttonToggle);
     }
 
     public void testJDBC() throws  Throwable {
-        Connection mConnection = ERPConnectionFactory.GetConnection();
+        Class.forName("net.sourceforge.jtds.jdbc.Driver");
+        DriverManager.setLoginTimeout(5);
+        Connection mConnection = DriverManager.getConnection("jdbc:jtds:sqlserver://192.168.18.77;instance=SQLEXPRESS;DatabaseName=CITEST", "lacty", "wu0g3tp6");
         DatabaseMetaData dbm = mConnection.getMetaData();
         ResultSet rs = null;
-        rs = dbm.getTables(null, null, "%", new String[] { "TABLE" });
+        Statement stmt = mConnection.createStatement();
+        rs = stmt.executeQuery("select depname from bdepartment");
         while (rs.next()) {
-            Log.i("TEST", rs.getString("TABLE_NAME")); }
+            Log.i("TEST", rs.getString("depname")); }
     }
 
 }
