@@ -75,6 +75,7 @@ public class ScreenCaptureFragment extends Fragment implements View.OnClickListe
     private MediaProjectionManager mMediaProjectionManager;
     private Button mButtonToggle;
     private Button mButtonShow;
+    private Button mButtonWindow;
     private SurfaceView mSurfaceView;
     private ImageReader mImageReader;
 
@@ -109,9 +110,11 @@ public class ScreenCaptureFragment extends Fragment implements View.OnClickListe
         mSurface = mSurfaceView.getHolder().getSurface();
         mButtonToggle = (Button) view.findViewById(R.id.toggle);
         mButtonShow = view.findViewById(R.id.btnShow);
+        mButtonWindow = view.findViewById(R.id.window);
 
         mButtonShow.setOnClickListener(this);
         mButtonToggle.setOnClickListener(this);
+        mButtonWindow.setOnClickListener(this);
         Activity activity = getActivity();
         DisplayMetrics metrics = new DisplayMetrics();
         activity.getWindowManager().getDefaultDisplay().getMetrics(metrics);
@@ -234,6 +237,12 @@ public class ScreenCaptureFragment extends Fragment implements View.OnClickListe
                         Log.i(TAG, rs.getString("depname")); }
                 } catch (SQLException e) {
                     e.printStackTrace();
+                }
+                break;
+            case R.id.window:
+                Activity a = getActivity();
+                if ( a != null) {
+                    a.startService(new Intent(a, FloatingWindow.class));
                 }
                 break;
         }

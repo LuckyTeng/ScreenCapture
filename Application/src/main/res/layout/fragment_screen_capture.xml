@@ -44,6 +44,12 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/show" />
+
+        <Button
+            android:id="@+id/window"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/window" />
     </LinearLayout>
 
 </LinearLayout>
