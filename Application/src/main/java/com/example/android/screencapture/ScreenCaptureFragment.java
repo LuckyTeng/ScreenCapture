@@ -119,7 +119,7 @@ public class ScreenCaptureFragment extends Fragment implements View.OnClickListe
         DisplayMetrics metrics = new DisplayMetrics();
         activity.getWindowManager().getDefaultDisplay().getMetrics(metrics);
         mImageReader = ImageReader.newInstance(metrics.widthPixels, metrics.heightPixels, PixelFormat.RGBA_8888, 1);
-        mSurface = mImageReader.getSurface();
+        //mSurface = mImageReader.getSurface();
         mImageReader.setOnImageAvailableListener(new ImageReader.OnImageAvailableListener() {
             @Override
             public void onImageAvailable(ImageReader reader) {
@@ -229,22 +229,30 @@ public class ScreenCaptureFragment extends Fragment implements View.OnClickListe
                 }
                 break;
             case R.id.btnShow:
-                try {
-                    Connection mConnection = ERPConnectionFactory.GetConnection();
-                    Statement stmt = mConnection.createStatement();
-                    ResultSet rs = stmt.executeQuery("select depname from bdepartment");
-                    while (rs.next()) {
-                        Log.i(TAG, rs.getString("depname")); }
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                }
+                fetchDepartments();
                 break;
             case R.id.window:
                 Activity a = getActivity();
-                if ( a != null) {
-                    a.startService(new Intent(a, FloatingWindow.class));
+                if ( a != null && mResultCode != 0) {
+                    Intent service = new Intent(a, FloatingWindow.class);
+                    service.putExtra(STATE_RESULT_DATA, mResultData);
+                    service.putExtra(STATE_RESULT_CODE, mResultCode);
+                    tearDownMediaProjection();
+                    a.startService(service);
                 }
                 break;
+        }
+    }
+
+    private void fetchDepartments() {
+        try {
+            Connection mConnection = ERPConnectionFactory.GetConnection();
+            Statement stmt = mConnection.createStatement();
+            ResultSet rs = stmt.executeQuery("select depname from bdepartment");
+            while (rs.next()) {
+                Log.i(TAG, rs.getString("depname")); }
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
     }
 
