@@ -20,7 +20,6 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.graphics.ImageFormat;
 import android.graphics.PixelFormat;
 import android.hardware.display.DisplayManager;
 import android.hardware.display.VirtualDisplay;
@@ -30,7 +29,6 @@ import android.media.projection.MediaProjection;
 import android.media.projection.MediaProjectionManager;
 import android.os.Bundle;
 import android.os.Environment;
-import android.os.Handler;
 import android.os.StrictMode;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -50,8 +48,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.sql.Connection;
-import java.sql.DatabaseMetaData;
-import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -108,15 +104,6 @@ public class ScreenCaptureFragment extends Fragment implements View.OnClickListe
             StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder()
                     .permitAll().build();
             StrictMode.setThreadPolicy(policy);
-        }
-        try {
-            Class.forName("net.sourceforge.jtds.jdbc.Driver").newInstance();
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        } catch (java.lang.InstantiationException e) {
-            e.printStackTrace();
         }
         mSurfaceView = (SurfaceView) view.findViewById(R.id.surface);
         mSurface = mSurfaceView.getHolder().getSurface();
@@ -240,11 +227,9 @@ public class ScreenCaptureFragment extends Fragment implements View.OnClickListe
                 break;
             case R.id.btnShow:
                 try {
-                    Connection mConnection = DriverManager.getConnection("jdbc:jtds:sqlserver://192.168.18.77;instance=SQLEXPRESS;DatabaseName=CITEST;TDS=8.0", "lacty", "wu0g3tp6");
-                    DatabaseMetaData dbm = mConnection.getMetaData();
-                    ResultSet rs = null;
+                    Connection mConnection = ERPConnectionFactory.GetConnection();
                     Statement stmt = mConnection.createStatement();
-                    rs = stmt.executeQuery("select depname from bdepartment");
+                    ResultSet rs = stmt.executeQuery("select depname from bdepartment");
                     while (rs.next()) {
                         Log.i(TAG, rs.getString("depname")); }
                 } catch (SQLException e) {
