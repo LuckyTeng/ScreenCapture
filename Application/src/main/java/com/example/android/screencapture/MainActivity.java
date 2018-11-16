@@ -46,6 +46,12 @@ public class MainActivity extends SampleActivityBase {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        //setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE);
+
+        // Android 4.1 and higher simple way to request fullscreen.
+//        mGameView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN);
+
         setContentView(R.layout.activity_main);
 
         if (savedInstanceState == null) {

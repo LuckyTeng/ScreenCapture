@@ -12,6 +12,7 @@ import android.media.projection.MediaProjection;
 import android.media.projection.MediaProjectionManager;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
+import android.util.DisplayMetrics;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.Surface;
@@ -60,17 +61,23 @@ public class FloatingWindow extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        // main thread, store data only
         mResultData = intent.getParcelableExtra(STATE_RESULT_DATA);
         mResultCode = intent.getIntExtra(STATE_RESULT_CODE, 0);
-        setUpMediaProjection();
-        setUpVirtualDisplay();
+
         return super.onStartCommand(intent, flags, startId);
     }
 
     private void setUpVirtualDisplay() {
+        //mSurfaceView.getHolder().setFixedSize(400, 200);
+        mSurface = mSurfaceView.getHolder().getSurface();
+
+        while (!mSurface.isValid());
+
         Log.i(TAG, "Setting up a VirtualDisplay: " +
                 mSurfaceView.getWidth() + "x" + mSurfaceView.getHeight() +
                 " (" + mScreenDensity + ")");
+
         mVirtualDisplay = mMediaProjection.createVirtualDisplay("ScreenCapture",
                 mSurfaceView.getWidth(), mSurfaceView.getHeight(), mScreenDensity,
                 DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
@@ -98,9 +105,6 @@ public class FloatingWindow extends Service {
 
         _stop = new Button(this);
         mSurfaceView = new SurfaceView(this);
-        mSurfaceView.setMinimumWidth(300);
-        mSurfaceView.setMinimumHeight(200);
-        mSurfaceView.setVisibility(View.VISIBLE);
 
 //        _imageView = new ImageView(this);
 //        _imageView.setBackgroundColor(Color.argb(255,128,63,255));
@@ -114,7 +118,7 @@ public class FloatingWindow extends Service {
         mSurfaceView.setLayoutParams(ivParameters);
 //        _imageView.setLayoutParams(ivParameters);
 
-        Log.i(TAG, "Width:" + mSurfaceView.getWidth());
+        Log.i(TAG, "mSurfaceView Width:" + mSurfaceView.getWidth());
 
         final WindowManager.LayoutParams parameters = new WindowManager.LayoutParams(600, 450,WindowManager.LayoutParams.TYPE_PHONE, WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
                 PixelFormat.TRANSLUCENT);
@@ -127,6 +131,12 @@ public class FloatingWindow extends Service {
         _ll.addView(mSurfaceView);
 //        _ll.addView(_imageView);
         _wm.addView(_ll, parameters);
+
+        DisplayMetrics metrics = new DisplayMetrics();
+        _wm.getDefaultDisplay().getMetrics(metrics);
+        mScreenDensity = metrics.densityDpi;
+
+        Log.i(TAG, "mSurfaceView densityDpi:" + mScreenDensity);
 
         _ll.setOnTouchListener(new View.OnTouchListener() {
             private WindowManager.LayoutParams updatedParameters = parameters;
@@ -164,6 +174,8 @@ public class FloatingWindow extends Service {
         _stop.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                setUpMediaProjection();
+                setUpVirtualDisplay();
 //                Bitmap b = ScreenShot.takescreenshotOfRootView(_imageView);
 //                _imageView.setImageBitmap(b);
                 //_wm.removeView(_ll);
