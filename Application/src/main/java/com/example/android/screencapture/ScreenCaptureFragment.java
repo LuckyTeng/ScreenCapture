@@ -222,11 +222,13 @@ public class ScreenCaptureFragment extends Fragment implements View.OnClickListe
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.toggle:
-                if (mVirtualDisplay == null) {
-                    startScreenCapture();
-                } else {
-                    stopScreenCapture();
-                }
+                Intent intent = new Intent(getActivity(), com.example.android.screencapture.LoginActivity.class);
+                getActivity().startActivity(intent);
+//                if (mVirtualDisplay == null) {
+//                    startScreenCapture();
+//                } else {
+//                    stopScreenCapture();
+//                }
                 break;
             case R.id.btnShow:
                 fetchDepartments();
