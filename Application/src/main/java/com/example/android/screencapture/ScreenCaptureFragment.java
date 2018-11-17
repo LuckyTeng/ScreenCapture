@@ -29,7 +29,6 @@ import android.media.projection.MediaProjection;
 import android.media.projection.MediaProjectionManager;
 import android.os.Bundle;
 import android.os.Environment;
-import android.os.StrictMode;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.util.DisplayMetrics;
@@ -80,6 +79,7 @@ public class ScreenCaptureFragment extends Fragment implements View.OnClickListe
     private ImageReader mImageReader;
 
     private int count;
+    private int mClickId;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -98,14 +98,6 @@ public class ScreenCaptureFragment extends Fragment implements View.OnClickListe
 
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
-        int SDK_INT = android.os.Build.VERSION.SDK_INT;
-        if (SDK_INT > 8)
-        {
-            // starting from SDK 9, NETWORK operation is not allow in main thread
-            StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder()
-                    .permitAll().build();
-            StrictMode.setThreadPolicy(policy);
-        }
         mSurfaceView = (SurfaceView) view.findViewById(R.id.surface);
         mSurface = mSurfaceView.getHolder().getSurface();
         mButtonToggle = (Button) view.findViewById(R.id.toggle);
@@ -220,29 +212,39 @@ public class ScreenCaptureFragment extends Fragment implements View.OnClickListe
 
     @Override
     public void onClick(View v) {
+        mClickId = v.getId();
         switch (v.getId()) {
             case R.id.toggle:
-                Intent intent = new Intent(getActivity(), com.example.android.screencapture.LoginActivity.class);
-                getActivity().startActivity(intent);
-//                if (mVirtualDisplay == null) {
-//                    startScreenCapture();
-//                } else {
-//                    stopScreenCapture();
-//                }
+                if (mVirtualDisplay == null) {
+                    startScreenCapture();
+                } else {
+                    stopScreenCapture();
+                }
                 break;
             case R.id.btnShow:
                 fetchDepartments();
                 break;
             case R.id.window:
-                Activity a = getActivity();
-                if ( a != null && mResultCode != 0) {
-                    Intent service = new Intent(a, FloatingWindow.class);
-                    service.putExtra(STATE_RESULT_DATA, mResultData);
-                    service.putExtra(STATE_RESULT_CODE, mResultCode);
-                    tearDownMediaProjection();
-                    a.startService(service);
+                if ( mResultCode == 0) {
+                    startActivityForResult(
+                            mMediaProjectionManager.createScreenCaptureIntent(),
+                            REQUEST_MEDIA_PROJECTION);
                 }
                 break;
+        }
+    }
+
+    private void startFloatingWindowService() {
+        Activity a = getActivity();
+        Log.i(TAG, "startFloatingWindowService");
+        // This initiates a prompt dialog for the user to confirm screen projection.
+
+        if ( a != null && mResultCode != 0) {
+            Intent service = new Intent(a, FloatingWindow.class);
+            service.putExtra(STATE_RESULT_DATA, mResultData);
+            service.putExtra(STATE_RESULT_CODE, mResultCode);
+            tearDownMediaProjection();
+            a.startService(service);
         }
     }
 
@@ -273,8 +275,12 @@ public class ScreenCaptureFragment extends Fragment implements View.OnClickListe
             Log.i(TAG, "Starting screen capture");
             mResultCode = resultCode;
             mResultData = data;
-            setUpMediaProjection();
-            setUpVirtualDisplay();
+            if ( mClickId == R.id.toggle) {
+                setUpMediaProjection();
+                setUpVirtualDisplay();
+            } else if ( mClickId == R.id.window) {
+                startFloatingWindowService();
+            }
         }
     }
 

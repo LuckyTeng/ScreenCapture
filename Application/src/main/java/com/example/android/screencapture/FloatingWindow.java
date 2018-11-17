@@ -32,8 +32,6 @@ public class FloatingWindow extends Service {
     private static final String STATE_RESULT_CODE = "result_code";
     private static final String STATE_RESULT_DATA = "result_data";
 
-    private static final int REQUEST_MEDIA_PROJECTION = 1;
-
     private int mScreenDensity;
 
     private int mResultCode;
@@ -43,15 +41,13 @@ public class FloatingWindow extends Service {
     private MediaProjection mMediaProjection;
     private VirtualDisplay mVirtualDisplay;
     private MediaProjectionManager mMediaProjectionManager;
-    private Button mButtonToggle;
-    private Button mButtonShow;
-    private Button mButtonWindow;
     private SurfaceView mSurfaceView;
     private ImageReader mImageReader;
 
     private WindowManager _wm;
     private LinearLayout _ll;
     private Button _stop;
+    private String mStatus;
     //private ImageView _imageView;
 
     @Nullable
@@ -70,7 +66,6 @@ public class FloatingWindow extends Service {
     }
 
     private void setUpVirtualDisplay() {
-        //mSurfaceView.getHolder().setFixedSize(400, 200);
         mSurface = mSurfaceView.getHolder().getSurface();
 
         while (!mSurface.isValid());
@@ -112,8 +107,9 @@ public class FloatingWindow extends Service {
 //        _imageView.setBackgroundColor(Color.argb(255,128,63,255));
 
         ViewGroup.LayoutParams btnParameters = new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        _stop.setText("Stop");
+        _stop.setText("Start");
         _stop.setLayoutParams(btnParameters);
+        mStatus = "Start";
 
         ViewGroup.LayoutParams ivParameters =
                 new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
@@ -122,7 +118,7 @@ public class FloatingWindow extends Service {
 
         Log.i(TAG, "mSurfaceView Width:" + mSurfaceView.getWidth());
 
-        final WindowManager.LayoutParams parameters = new WindowManager.LayoutParams(600, 450,WindowManager.LayoutParams.TYPE_PHONE, WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
+        final WindowManager.LayoutParams parameters = new WindowManager.LayoutParams(220, 450,WindowManager.LayoutParams.TYPE_PHONE, WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
                 PixelFormat.TRANSLUCENT);
         parameters.x = 0;
         parameters.y = 0;
@@ -176,14 +172,38 @@ public class FloatingWindow extends Service {
         _stop.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                setUpMediaProjection();
-                setUpVirtualDisplay();
+                if ( mStatus == "Start") {
+                    setUpMediaProjection();
+                    setUpVirtualDisplay();
+                    mStatus = "Stop";
+                    _stop.setText("Stop");
+                }
+                else {
+                    stopScreenCapture();
+                    tearDownMediaProjection();
+                    mStatus = "Start";
+                }
 //                Bitmap b = ScreenShot.takescreenshotOfRootView(_imageView);
 //                _imageView.setImageBitmap(b);
                 //_wm.removeView(_ll);
-
                 //stopSelf();
             }
         });
+    }
+
+    private void stopScreenCapture() {
+        if (mVirtualDisplay == null) {
+            return;
+        }
+        mVirtualDisplay.release();
+        mVirtualDisplay = null;
+        _stop.setText(R.string.start);
+    }
+
+    private void tearDownMediaProjection() {
+        if (mMediaProjection != null) {
+            mMediaProjection.stop();
+            mMediaProjection = null;
+        }
     }
 }
