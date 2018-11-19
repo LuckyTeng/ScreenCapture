@@ -17,7 +17,10 @@
 
 package com.example.android.screencapture;
 
+import android.content.Intent;
+import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.support.v4.app.FragmentTransaction;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -39,6 +42,18 @@ import com.example.android.common.logger.MessageOnlyLogFilter;
 public class MainActivity extends SampleActivityBase {
 
     public static final String TAG = "MainActivity";
+
+    static final int REQUEST_IMAGE_CAPTURE = 1;
+
+    /*
+     * Dispatch a take picture intent
+     */
+    private void dispatchTakePictureIntent() {
+        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
+            startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
+        }
+    }
 
     // Whether the Log Fragment is currently shown
     private boolean mLogShown;
@@ -90,6 +105,9 @@ public class MainActivity extends SampleActivityBase {
                 }
                 supportInvalidateOptionsMenu();
                 return true;
+            case R.id.menu_action1:
+                dispatchTakePictureIntent();
+                break;
         }
         return super.onOptionsItemSelected(item);
     }
@@ -112,5 +130,14 @@ public class MainActivity extends SampleActivityBase {
         msgFilter.setNext(logFragment.getLogView());
 
         Log.i(TAG, "Ready");
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
+            Bundle extras = data.getExtras();
+            Bitmap imageBitmap = (Bitmap) extras.get("data");
+            android.util.Log.d(TAG, "onActivityResult: width:" + imageBitmap.getWidth());
+        }
     }
 }
