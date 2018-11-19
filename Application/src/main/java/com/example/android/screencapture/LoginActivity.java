@@ -9,8 +9,6 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.example.android.services.HelloIntentService;
-
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -43,8 +41,6 @@ public class LoginActivity extends Activity {
         mLoginView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startService(new Intent(v.getContext(), HelloIntentService.class));
-
                 try {
                     ResultSet rs = getLoginResultSet();
 

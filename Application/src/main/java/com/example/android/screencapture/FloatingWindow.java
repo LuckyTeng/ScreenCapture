@@ -23,6 +23,7 @@ import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.LinearLayout;
+import android.widget.Toast;
 
 import com.example.android.common.logger.Log;
 
@@ -189,6 +190,14 @@ public class FloatingWindow extends Service {
                 //stopSelf();
             }
         });
+    }
+
+    @Override
+    public void onDestroy() {
+        Toast.makeText(this, "FloatingWindow Destroy.", Toast.LENGTH_SHORT).show();
+        stopScreenCapture();
+        tearDownMediaProjection();
+        super.onDestroy();
     }
 
     private void stopScreenCapture() {

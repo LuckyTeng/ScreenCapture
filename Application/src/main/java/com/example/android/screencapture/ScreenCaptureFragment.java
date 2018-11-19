@@ -31,6 +31,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentActivity;
 import android.util.DisplayMetrics;
 import android.view.LayoutInflater;
 import android.view.Surface;
@@ -229,6 +230,8 @@ public class ScreenCaptureFragment extends Fragment implements View.OnClickListe
                     startActivityForResult(
                             mMediaProjectionManager.createScreenCaptureIntent(),
                             REQUEST_MEDIA_PROJECTION);
+                } else {
+                    startFloatingWindowService();
                 }
                 break;
         }
@@ -293,6 +296,11 @@ public class ScreenCaptureFragment extends Fragment implements View.OnClickListe
     @Override
     public void onDestroy() {
         super.onDestroy();
+        FragmentActivity a = getActivity();
+        if ( a != null ) {
+            Intent service = new Intent(a, FloatingWindow.class);
+            a.stopService(service);
+        }
         tearDownMediaProjection();
     }
 
