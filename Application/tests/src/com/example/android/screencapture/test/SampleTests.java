@@ -16,23 +16,22 @@
 
 package com.example.android.screencapture.test;
 
+import android.content.Intent;
 import android.test.ActivityInstrumentationTestCase2;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
 
 import com.example.android.common.logger.Log;
-import com.example.android.screencapture.ERPConnectionFactory;
 import com.example.android.screencapture.MainActivity;
 import com.example.android.screencapture.R;
 import com.example.android.screencapture.ScreenCaptureFragment;
+import com.example.android.services.HelloIntentService;
 
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
-import java.sql.Date;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.sql.Statement;
 
 
@@ -85,6 +84,12 @@ public class SampleTests extends ActivityInstrumentationTestCase2<MainActivity> 
         rs = stmt.executeQuery("select depname from bdepartment");
         while (rs.next()) {
             Log.i("TEST", rs.getString("depname")); }
+    }
+
+    public void testHelloIntentService() {
+        Intent intent = new Intent(mTestActivity, HelloIntentService.class);
+        mTestActivity.startService(intent);
+        mTestActivity.stopService(intent);
     }
 
 }
