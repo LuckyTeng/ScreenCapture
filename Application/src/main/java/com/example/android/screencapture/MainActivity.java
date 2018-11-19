@@ -138,6 +138,9 @@ public class MainActivity extends SampleActivityBase {
             Bundle extras = data.getExtras();
             Bitmap imageBitmap = (Bitmap) extras.get("data");
             android.util.Log.d(TAG, "onActivityResult: width:" + imageBitmap.getWidth());
+            return;
         }
+        // call super to pass to frames
+        super.onActivityResult(requestCode, resultCode, data);
     }
 }

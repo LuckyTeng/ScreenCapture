@@ -49,8 +49,9 @@
             </intent-filter>
         </activity>
 
-        <service android:name=".FloatingWindow"
-                 android:exported="false"/>
+        <service android:name=".FloatingWindow"/>
+                 <!--android:exported="false"-->
+
         <service android:name="com.example.android.services.HelloIntentService" />
         <!-- <service android:name=".FloatingWindow2"/> -->
 
