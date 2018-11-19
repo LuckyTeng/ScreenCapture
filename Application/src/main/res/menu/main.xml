@@ -20,4 +20,6 @@
     <item android:id="@+id/menu_toggle_log"
           android:showAsAction="always"
           android:title="@string/sample_show_log" />
+    <item android:id="@+id/menu_action1"
+        android:title="@string/sample_action1" />
 </menu>
