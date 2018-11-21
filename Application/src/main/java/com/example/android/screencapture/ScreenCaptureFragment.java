@@ -27,6 +27,7 @@ import android.media.Image;
 import android.media.ImageReader;
 import android.media.projection.MediaProjection;
 import android.media.projection.MediaProjectionManager;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.annotation.Nullable;
@@ -78,11 +79,10 @@ public class ScreenCaptureFragment extends Fragment implements View.OnClickListe
     private Button mButtonWindow;
     private SurfaceView mSurfaceView;
     private ImageReader mImageReader;
-
+    private RenderScriptTask mRenderScriptTask;
 
     private int count;
     private int mClickId;
-    private boolean mInReading = false;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -118,94 +118,8 @@ public class ScreenCaptureFragment extends Fragment implements View.OnClickListe
         mImageReader.setOnImageAvailableListener(new ImageReader.OnImageAvailableListener() {
             @Override
             public void onImageAvailable(ImageReader reader) {
-                if (mInReading == true) return;
-                mInReading = true;
-//                if ( mVirtualDisplay == null) return;
-//                stopScreenCapture(); // capture only one image.
-
-                FileOutputStream fos = null;
-                Bitmap bitmap = null;
-                Image img = null;
-
-                Activity activity = getActivity();
-                DisplayMetrics metrics = new DisplayMetrics();
-
-                activity.getWindowManager().getDefaultDisplay().getMetrics(metrics);
-
-                try {
-                    img = reader.acquireLatestImage();
-
-                    if (img != null) {
-                        Image.Plane[] planes = img.getPlanes();
-                        if (planes[0].getBuffer() == null) {
-                            return;
-                        }
-                        int width = img.getWidth();
-                        int height = img.getHeight();
-                        int pixelStride = planes[0].getPixelStride();
-                        int rowStride = planes[0].getRowStride();
-                        int rowPadding = rowStride - pixelStride * width;
-                        //byte[] newData = new byte[width * height * 4];
-
-                        int offset = 0;
-
-                        bitmap = Bitmap.createBitmap(metrics,width, height, Bitmap.Config.ARGB_8888);
-                        int rowBytes = bitmap.getRowBytes();
-                        int size = rowBytes * bitmap.getHeight();
-                        ByteBuffer byteBuffer = ByteBuffer.allocate(size);
-                        byte[] bytes = byteBuffer.array();
-
-                        ByteBuffer buffer = planes[0].getBuffer();
-                        for (int i = 0; i < height; ++i) {
-                            for (int j = 0; j < width; ++j) {
-                                int pixel = 0;
-//                                pixel |= (buffer.get(offset) & 0xff) << 16;     // R
-//                                pixel |= (buffer.get(offset + 1) & 0xff) << 8;  // G
-//                                pixel |= (buffer.get(offset + 2) & 0xff);       // B
-//                                pixel |= (buffer.get(offset + 3) & 0xff) << 24; // A
-//                                bitmap.setPixel(j, i, pixel);
-                                bytes[i * rowBytes + j*4+2] = buffer.get(offset);
-                                bytes[i * rowBytes + j*4+1] = buffer.get(offset+1);
-                                bytes[i * rowBytes + j*4] = buffer.get(offset+2);
-                                bytes[i * rowBytes + j*4+3] = buffer.get(offset+3);
-                                offset += pixelStride;
-                            }
-                            offset += rowPadding;
-                        }
-                        bitmap.copyPixelsFromBuffer(byteBuffer);
-
-                        String name = "/myscreen" + count + ".png";
-                        count++;
-                        File file = new File(Environment.getExternalStorageDirectory(), name);
-                        if ( count == 1) {
-                            fos = new FileOutputStream(file);
-                            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, fos);
-                        }
-                        // Environment.getExternalStorageDirectory()
-                        // Environment.getDataDirectory() + "/data/com.example.android.screencapture"
-                        Log.i(TAG, "image saved in" + Environment.getExternalStorageDirectory()  + name);
-                        img.close();
-                    }
-
-                } catch (Exception e) {
-                    e.printStackTrace();
-                } finally {
-                    mInReading = false;
-                    if (null != fos) {
-                        try {
-                            fos.close();
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                    if (null != bitmap) {
-                        bitmap.recycle();
-                    }
-                    if (null != img) {
-                        img.close();
-                    }
-
-                }
+                // every time when reader ok, you need to consume it
+                SaveCaptureImage();
             }
         }, null);
     }
@@ -373,4 +287,127 @@ public class ScreenCaptureFragment extends Fragment implements View.OnClickListe
         mButtonToggle.setText(R.string.start);
     }
 
+    private void SaveCaptureImage() {
+        if ( mRenderScriptTask != null )
+            mRenderScriptTask.cancel( false); // wait for cancel
+
+        mRenderScriptTask = new RenderScriptTask();
+        mRenderScriptTask.execute();
+    }
+
+    private class RenderScriptTask extends AsyncTask<Float, Integer, Integer> {
+
+        private boolean mIssued;
+
+        protected Integer doInBackground(Float... values) {
+            int index = -1;
+            if (!isCancelled()) {
+                //while ( !imageAvailable ) ; // wait for image
+
+                mIssued = true;
+                FileOutputStream fos = null;
+                Bitmap bitmap = null;
+                Image img = null;
+                ImageReader reader = mImageReader;
+
+                Activity activity = getActivity();
+                DisplayMetrics metrics = new DisplayMetrics();
+
+                activity.getWindowManager().getDefaultDisplay().getMetrics(metrics);
+
+                try {
+                    img = reader.acquireLatestImage();
+
+                    if (img != null) {
+                        Image.Plane[] planes = img.getPlanes();
+                        if (planes[0].getBuffer() == null) {
+                            return -1;
+                        }
+                        int width = img.getWidth();
+                        int height = img.getHeight();
+                        int pixelStride = planes[0].getPixelStride();
+                        int rowStride = planes[0].getRowStride();
+                        int rowPadding = rowStride - pixelStride * width;
+                        //byte[] newData = new byte[width * height * 4];
+
+                        int offset = 0;
+
+                        bitmap = Bitmap.createBitmap(metrics,width, height, Bitmap.Config.ARGB_8888);
+                        int rowBytes = bitmap.getRowBytes();
+                        int size = rowBytes * bitmap.getHeight();
+                        ByteBuffer byteBuffer = ByteBuffer.allocate(size);
+                        byte[] bytes = byteBuffer.array();
+
+                        ByteBuffer buffer = planes[0].getBuffer();
+                        for (int i = 0; i < height; ++i) {
+                            for (int j = 0; j < width; ++j) {
+//                                int pixel = 0;
+//                                pixel |= (buffer.get(offset) & 0xff) << 16;     // R
+//                                pixel |= (buffer.get(offset + 1) & 0xff) << 8;  // G
+//                                pixel |= (buffer.get(offset + 2) & 0xff);       // B
+//                                pixel |= (buffer.get(offset + 3) & 0xff) << 24; // A
+//                                bitmap.setPixel(j, i, pixel);
+                                bytes[i * rowBytes + j*4+2] = buffer.get(offset);
+                                bytes[i * rowBytes + j*4+1] = buffer.get(offset+1);
+                                bytes[i * rowBytes + j*4] = buffer.get(offset+2);
+                                bytes[i * rowBytes + j*4+3] = buffer.get(offset+3);
+                                offset += pixelStride;
+                            }
+                            offset += rowPadding;
+                        }
+                        bitmap.copyPixelsFromBuffer(byteBuffer);
+
+                        String name = "/myscreen" + count + ".png";
+                        count++;
+                        File file = new File(Environment.getExternalStorageDirectory(), name);
+                        fos = new FileOutputStream(file);
+                        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, fos);
+                        // Environment.getExternalStorageDirectory()
+                        // Environment.getDataDirectory() + "/data/com.example.android.screencapture"
+                        Log.i(TAG, "image saved in" + Environment.getExternalStorageDirectory()  + name);
+                        img.close();
+                    }
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                } finally {
+                    if (null != fos) {
+                        try {
+                            fos.close();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    if (null != bitmap) {
+                        bitmap.recycle();
+                    }
+                    if (null != img) {
+                        img.close();
+                    }
+
+                }
+            }
+            return index;
+        }
+
+        void updateView(Integer result) {
+            if (result != -1) {
+                // Request UI update
+//                mImageView.setImageBitmap(mBitmapsOut[result]);
+//                mImageView.invalidate();
+            }
+        }
+
+        protected void onPostExecute(Integer result) {
+            updateView(result);
+            mRenderScriptTask = null;
+        }
+
+        protected void onCancelled(Integer result) {
+            if (mIssued) {
+                updateView(result);
+            }
+            mRenderScriptTask = null;
+        }
+    }
 }
