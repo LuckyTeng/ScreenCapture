@@ -17,6 +17,7 @@
 package com.example.android.screencapture.test;
 
 import android.content.Intent;
+import android.os.Build;
 import android.test.ActivityInstrumentationTestCase2;
 import android.view.View;
 import android.view.WindowManager;
@@ -33,12 +34,14 @@ import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.util.Arrays;
 
 
 /**
  * Tests for ScreenCapture sample.
  */
 public class SampleTests extends ActivityInstrumentationTestCase2<MainActivity> {
+    private static final String TAG = "ActivityInstrumentationTestCase2";
 
     private MainActivity mTestActivity;
     private ScreenCaptureFragment mTestFragment;
@@ -90,6 +93,21 @@ public class SampleTests extends ActivityInstrumentationTestCase2<MainActivity> 
         Intent intent = new Intent(mTestActivity, HelloIntentService.class);
         mTestActivity.startService(intent);
         mTestActivity.stopService(intent);
+    }
+
+    public void testGetArch() {
+        String arch = System.getProperty("os.arch");
+        assertEquals("x86", arch);
+    }
+
+    public void testSupportABI() {
+        Log.i(TAG, "CPU_ABI : " + Build.CPU_ABI);
+        Log.i(TAG, "CPU_ABI2 : " + Build.CPU_ABI2);
+        Log.i(TAG, "OS.ARCH : " + System.getProperty("os.arch"));
+
+        Log.i(TAG, "SUPPORTED_ABIS : " + Arrays.toString(Build.SUPPORTED_ABIS));
+        Log.i(TAG, "SUPPORTED_32_BIT_ABIS : " + Arrays.toString(Build.SUPPORTED_32_BIT_ABIS));
+        Log.i(TAG, "SUPPORTED_64_BIT_ABIS : " + Arrays.toString(Build.SUPPORTED_64_BIT_ABIS));
     }
 
 }
