@@ -79,8 +79,10 @@ public class ScreenCaptureFragment extends Fragment implements View.OnClickListe
     private SurfaceView mSurfaceView;
     private ImageReader mImageReader;
 
+
     private int count;
     private int mClickId;
+    private boolean mInReading = false;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -100,7 +102,7 @@ public class ScreenCaptureFragment extends Fragment implements View.OnClickListe
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
         mSurfaceView = (SurfaceView) view.findViewById(R.id.surface);
-        mSurface = mSurfaceView.getHolder().getSurface();
+        //mSurface = mSurfaceView.getHolder().getSurface();
         mButtonToggle = (Button) view.findViewById(R.id.toggle);
         mButtonShow = view.findViewById(R.id.btnShow);
         mButtonWindow = view.findViewById(R.id.window);
@@ -112,12 +114,14 @@ public class ScreenCaptureFragment extends Fragment implements View.OnClickListe
         DisplayMetrics metrics = new DisplayMetrics();
         activity.getWindowManager().getDefaultDisplay().getMetrics(metrics);
         mImageReader = ImageReader.newInstance(metrics.widthPixels, metrics.heightPixels, PixelFormat.RGBA_8888, 1);
-        //mSurface = mImageReader.getSurface();
+        mSurface = mImageReader.getSurface();
         mImageReader.setOnImageAvailableListener(new ImageReader.OnImageAvailableListener() {
             @Override
             public void onImageAvailable(ImageReader reader) {
-                //if ( mVirtualDisplay == null) return;
-                stopScreenCapture(); // capture only one image.
+                if (mInReading == true) return;
+                mInReading = true;
+//                if ( mVirtualDisplay == null) return;
+//                stopScreenCapture(); // capture only one image.
 
                 FileOutputStream fos = null;
                 Bitmap bitmap = null;
@@ -130,6 +134,7 @@ public class ScreenCaptureFragment extends Fragment implements View.OnClickListe
 
                 try {
                     img = reader.acquireLatestImage();
+
                     if (img != null) {
                         Image.Plane[] planes = img.getPlanes();
                         if (planes[0].getBuffer() == null) {
@@ -145,24 +150,37 @@ public class ScreenCaptureFragment extends Fragment implements View.OnClickListe
                         int offset = 0;
 
                         bitmap = Bitmap.createBitmap(metrics,width, height, Bitmap.Config.ARGB_8888);
+                        int rowBytes = bitmap.getRowBytes();
+                        int size = rowBytes * bitmap.getHeight();
+                        ByteBuffer byteBuffer = ByteBuffer.allocate(size);
+                        byte[] bytes = byteBuffer.array();
+
                         ByteBuffer buffer = planes[0].getBuffer();
                         for (int i = 0; i < height; ++i) {
                             for (int j = 0; j < width; ++j) {
                                 int pixel = 0;
-                                pixel |= (buffer.get(offset) & 0xff) << 16;     // R
-                                pixel |= (buffer.get(offset + 1) & 0xff) << 8;  // G
-                                pixel |= (buffer.get(offset + 2) & 0xff);       // B
-                                pixel |= (buffer.get(offset + 3) & 0xff) << 24; // A
-                                bitmap.setPixel(j, i, pixel);
+//                                pixel |= (buffer.get(offset) & 0xff) << 16;     // R
+//                                pixel |= (buffer.get(offset + 1) & 0xff) << 8;  // G
+//                                pixel |= (buffer.get(offset + 2) & 0xff);       // B
+//                                pixel |= (buffer.get(offset + 3) & 0xff) << 24; // A
+//                                bitmap.setPixel(j, i, pixel);
+                                bytes[i * rowBytes + j*4+2] = buffer.get(offset);
+                                bytes[i * rowBytes + j*4+1] = buffer.get(offset+1);
+                                bytes[i * rowBytes + j*4] = buffer.get(offset+2);
+                                bytes[i * rowBytes + j*4+3] = buffer.get(offset+3);
                                 offset += pixelStride;
                             }
                             offset += rowPadding;
                         }
+                        bitmap.copyPixelsFromBuffer(byteBuffer);
+
                         String name = "/myscreen" + count + ".png";
                         count++;
                         File file = new File(Environment.getExternalStorageDirectory(), name);
-                        fos = new FileOutputStream(file);
-                        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, fos);
+                        if ( count == 1) {
+                            fos = new FileOutputStream(file);
+                            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, fos);
+                        }
                         // Environment.getExternalStorageDirectory()
                         // Environment.getDataDirectory() + "/data/com.example.android.screencapture"
                         Log.i(TAG, "image saved in" + Environment.getExternalStorageDirectory()  + name);
@@ -172,6 +190,7 @@ public class ScreenCaptureFragment extends Fragment implements View.OnClickListe
                 } catch (Exception e) {
                     e.printStackTrace();
                 } finally {
+                    mInReading = false;
                     if (null != fos) {
                         try {
                             fos.close();
