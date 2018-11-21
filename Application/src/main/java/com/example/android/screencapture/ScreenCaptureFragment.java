@@ -20,6 +20,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.Canvas;
 import android.graphics.PixelFormat;
 import android.hardware.display.DisplayManager;
 import android.hardware.display.VirtualDisplay;
@@ -102,7 +103,7 @@ public class ScreenCaptureFragment extends Fragment implements View.OnClickListe
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
         mSurfaceView = (SurfaceView) view.findViewById(R.id.surface);
-        //mSurface = mSurfaceView.getHolder().getSurface();
+//        mSurface = mSurfaceView.getHolder().getSurface();
         mButtonToggle = (Button) view.findViewById(R.id.toggle);
         mButtonShow = view.findViewById(R.id.btnShow);
         mButtonWindow = view.findViewById(R.id.window);
@@ -362,6 +363,13 @@ public class ScreenCaptureFragment extends Fragment implements View.OnClickListe
                         File file = new File(Environment.getExternalStorageDirectory(), name);
                         fos = new FileOutputStream(file);
                         bitmap.compress(Bitmap.CompressFormat.JPEG, 100, fos);
+                        Canvas canvas = mSurfaceView.getHolder().lockCanvas();
+                        try {
+                            canvas.drawBitmap(bitmap, 0, 0, null);
+                        }
+                        finally {
+                            mSurfaceView.getHolder().unlockCanvasAndPost(canvas);
+                        }
                         // Environment.getExternalStorageDirectory()
                         // Environment.getDataDirectory() + "/data/com.example.android.screencapture"
                         Log.i(TAG, "image saved in" + Environment.getExternalStorageDirectory()  + name);
