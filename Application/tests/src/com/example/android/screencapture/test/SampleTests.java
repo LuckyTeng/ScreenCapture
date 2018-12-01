@@ -92,7 +92,7 @@ public class SampleTests extends ActivityInstrumentationTestCase2<MainActivity> 
     public void testHelloIntentService() {
         Intent intent = new Intent(mTestActivity, HelloIntentService.class);
         mTestActivity.startService(intent);
-        mTestActivity.stopService(intent);
+        //mTestActivity.stopService(intent);
     }
 
     public void testGetArch() {

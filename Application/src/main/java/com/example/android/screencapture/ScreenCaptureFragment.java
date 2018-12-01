@@ -17,8 +17,10 @@
 package com.example.android.screencapture;
 
 import android.app.Activity;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.PixelFormat;
@@ -34,6 +36,7 @@ import android.os.Environment;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.DisplayMetrics;
 import android.view.LayoutInflater;
 import android.view.Surface;
@@ -44,6 +47,7 @@ import android.widget.Button;
 import android.widget.Toast;
 
 import com.example.android.common.logger.Log;
+import com.example.android.services.QueryIntentService;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -63,6 +67,8 @@ public class ScreenCaptureFragment extends Fragment implements View.OnClickListe
 
     private static final String STATE_RESULT_CODE = "result_code";
     private static final String STATE_RESULT_DATA = "result_data";
+
+    private static final String QUERY_RESULT_KEY = "QueryResult";
 
     private static final int REQUEST_MEDIA_PROJECTION = 1;
 
@@ -92,6 +98,27 @@ public class ScreenCaptureFragment extends Fragment implements View.OnClickListe
             mResultCode = savedInstanceState.getInt(STATE_RESULT_CODE);
             mResultData = savedInstanceState.getParcelable(STATE_RESULT_DATA);
         }
+
+        // The filter's action is BROADCAST_ACTION
+        IntentFilter statusIntentFilter = new IntentFilter(
+                Constants.BROADCAST_ACTION);
+
+        class InnerQueryResultReceiver extends BroadcastReceiver {
+            private static final String TAG = "InnerQueryResultReceiver";
+
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                mButtonShow.setEnabled(true);
+            }
+        }
+
+        InnerQueryResultReceiver mDownloadStateReceiver =
+                new InnerQueryResultReceiver();
+
+        // Registers the DownloadStateReceiver and its intent filters
+        LocalBroadcastManager.getInstance(getActivity()).registerReceiver(
+                mDownloadStateReceiver,
+                statusIntentFilter);
     }
 
     @Nullable
@@ -157,7 +184,7 @@ public class ScreenCaptureFragment extends Fragment implements View.OnClickListe
                 }
                 break;
             case R.id.btnShow:
-                fetchDepartments();
+                startFetchDepartmentsService();
                 break;
             case R.id.window:
                 if ( mResultCode == 0) {
@@ -182,6 +209,18 @@ public class ScreenCaptureFragment extends Fragment implements View.OnClickListe
             service.putExtra(STATE_RESULT_CODE, mResultCode);
             tearDownMediaProjection();
             a.startService(service);
+        }
+    }
+
+    private void startFetchDepartmentsService() {
+        Activity a = getActivity();
+        Log.i(TAG, "startFetchDepartmentsService");
+        // This initiates a prompt dialog for the user to confirm screen projection.
+
+        if ( a != null ) {
+            Intent service = new Intent(a, QueryIntentService.class);
+            a.startService(service);
+            mButtonShow.setEnabled(false);
         }
     }
 
@@ -339,6 +378,7 @@ public class ScreenCaptureFragment extends Fragment implements View.OnClickListe
                         ByteBuffer byteBuffer = ByteBuffer.allocate(size);
                         byte[] bytes = byteBuffer.array();
 
+                        // TODO: 2018/11/21 use RenderScript to render it 
                         ByteBuffer buffer = planes[0].getBuffer();
                         for (int i = 0; i < height; ++i) {
                             for (int j = 0; j < width; ++j) {
@@ -375,7 +415,6 @@ public class ScreenCaptureFragment extends Fragment implements View.OnClickListe
                         Log.i(TAG, "image saved in" + Environment.getExternalStorageDirectory()  + name);
                         img.close();
                     }
-
                 } catch (Exception e) {
                     e.printStackTrace();
                 } finally {
@@ -392,7 +431,6 @@ public class ScreenCaptureFragment extends Fragment implements View.OnClickListe
                     if (null != img) {
                         img.close();
                     }
-
                 }
             }
             return index;
@@ -408,14 +446,12 @@ public class ScreenCaptureFragment extends Fragment implements View.OnClickListe
 
         protected void onPostExecute(Integer result) {
             updateView(result);
-            mRenderScriptTask = null;
         }
 
         protected void onCancelled(Integer result) {
             if (mIssued) {
                 updateView(result);
             }
-            mRenderScriptTask = null;
         }
     }
 }

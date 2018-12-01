@@ -54,6 +54,7 @@
                  <!--android:exported="false"-->
 
         <service android:name="com.example.android.services.HelloIntentService" />
+        <service android:name="com.example.android.services.QueryIntentService" />
         <!-- <service android:name=".FloatingWindow2"/> -->
 
     </application>
