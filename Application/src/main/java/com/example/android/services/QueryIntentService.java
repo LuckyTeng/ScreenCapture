@@ -4,7 +4,6 @@ import android.app.IntentService;
 import android.content.Intent;
 import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
-import android.widget.Toast;
 
 import com.example.android.common.logger.Log;
 import com.example.android.screencapture.Constants;
@@ -33,7 +32,7 @@ public class QueryIntentService extends IntentService {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Toast.makeText(this, "service starting", Toast.LENGTH_SHORT).show();
+        Log.i(TAG,"QueryIntentService starting");
         return super.onStartCommand(intent,flags,startId);
     }
 
@@ -79,7 +78,6 @@ public class QueryIntentService extends IntentService {
 
                 ArrayList<String> strings = new ArrayList<>();
                 while (rs.next()) {
-                    Log.i(TAG, rs.getString("DescriptionCN"));
                     strings.add(rs.getString("DescriptionCN"));
                     localIntent.putStringArrayListExtra(QUERY_RESULT_KEY, strings);
                 }

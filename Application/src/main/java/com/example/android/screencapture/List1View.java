@@ -8,7 +8,10 @@ import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
+import android.view.View;
 import android.widget.ArrayAdapter;
+import android.widget.ListView;
+import android.widget.Toast;
 
 import com.example.android.common.logger.Log;
 import com.example.android.services.QueryIntentService;
@@ -28,6 +31,13 @@ public class List1View extends ListActivity {
 //        setListAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, mStrings));
 //        getListView().setTextFilterEnabled(true);
         InitInnerQueryResultReceiver();
+    }
+
+    @Override
+    protected void onListItemClick(ListView l, View v, int position, long id) {
+        super.onListItemClick(l, v, position, id);
+
+        Toast.makeText(this, "id:" + id, Toast.LENGTH_SHORT).show();
     }
 
     private void InitInnerQueryResultReceiver() {
