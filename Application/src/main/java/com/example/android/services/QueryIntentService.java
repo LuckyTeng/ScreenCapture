@@ -77,9 +77,9 @@ public class QueryIntentService extends IntentService {
 
                 ResultSet rs = stmt.executeQuery(qry);
 
+                ArrayList<String> strings = new ArrayList<>();
                 while (rs.next()) {
                     Log.i(TAG, rs.getString("DescriptionCN"));
-                    ArrayList<String> strings = new ArrayList<>();
                     strings.add(rs.getString("DescriptionCN"));
                     localIntent.putStringArrayListExtra(QUERY_RESULT_KEY, strings);
                 }

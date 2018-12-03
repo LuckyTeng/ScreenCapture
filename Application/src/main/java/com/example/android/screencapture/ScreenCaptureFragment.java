@@ -107,8 +107,6 @@ public class ScreenCaptureFragment extends Fragment implements View.OnClickListe
                 Constants.BROADCAST_ACTION);
 
         class InnerQueryResultReceiver extends BroadcastReceiver {
-            private static final String TAG = "InnerQueryResultReceiver";
-
             @Override
             public void onReceive(Context context, Intent intent) {
                 mButtonShow.setEnabled(true);
