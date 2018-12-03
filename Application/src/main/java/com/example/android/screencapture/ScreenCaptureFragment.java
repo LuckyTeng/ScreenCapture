@@ -84,12 +84,14 @@ public class ScreenCaptureFragment extends Fragment implements View.OnClickListe
     private Button mButtonToggle;
     private Button mButtonShow;
     private Button mButtonWindow;
+    private Button mButtonShowList;
     private SurfaceView mSurfaceView;
     private ImageReader mImageReader;
     private RenderScriptTask mRenderScriptTask;
 
     private int count;
     private int mClickId;
+
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -134,10 +136,13 @@ public class ScreenCaptureFragment extends Fragment implements View.OnClickListe
         mButtonToggle = (Button) view.findViewById(R.id.toggle);
         mButtonShow = view.findViewById(R.id.btnShow);
         mButtonWindow = view.findViewById(R.id.window);
+        mButtonShowList = view.findViewById(R.id.btnShowList);
 
         mButtonShow.setOnClickListener(this);
         mButtonToggle.setOnClickListener(this);
         mButtonWindow.setOnClickListener(this);
+        mButtonShowList.setOnClickListener(this);
+
         Activity activity = getActivity();
         DisplayMetrics metrics = new DisplayMetrics();
         activity.getWindowManager().getDefaultDisplay().getMetrics(metrics);
@@ -195,7 +200,17 @@ public class ScreenCaptureFragment extends Fragment implements View.OnClickListe
                     startFloatingWindowService();
                 }
                 break;
+            case R.id.btnShowList:
+                startList1View();
+                break;
         }
+    }
+
+    private void startList1View() {
+        Activity a = getActivity();
+        if ( a== null) return;
+        Intent intent = new Intent(getActivity(), List1View.class);
+        startActivity(intent);
     }
 
     private void startFloatingWindowService() {

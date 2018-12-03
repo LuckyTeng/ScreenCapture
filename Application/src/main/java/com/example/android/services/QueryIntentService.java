@@ -45,12 +45,14 @@ public class QueryIntentService extends IntentService {
                 try {
                     Connection mConnection = ERPConnectionFactory.GetConnection();
                     Statement stmt = mConnection.createStatement();
-                    ResultSet rs = stmt.executeQuery("select depname from bdepartment");
+                    String qry = "SELECT  DescriptionCN FROM    ConstructionApply";
+                    ResultSet rs = stmt.executeQuery(qry);
+                    //ResultSet rs = stmt.executeQuery("select depname from bdepartment");
 
                     while (rs.next()) {
-                        Log.i(TAG, rs.getString("depname"));
+                        Log.i(TAG, rs.getString("DescriptionCN"));
                         ArrayList<String> strings = new ArrayList<>();
-                        strings.add(rs.getString("depname"));
+                        strings.add(rs.getString("DescriptionCN"));
                         localIntent.putStringArrayListExtra(QUERY_RESULT_KEY, strings);
                     }
                 } catch (SQLException e) {
