@@ -53,10 +53,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+
+import static com.example.android.screencapture.Constants.QueryIntentService_FetchDep;
 
 /**
  * Provides UI for the screen capture.
@@ -100,7 +98,10 @@ public class ScreenCaptureFragment extends Fragment implements View.OnClickListe
             mResultCode = savedInstanceState.getInt(STATE_RESULT_CODE);
             mResultData = savedInstanceState.getParcelable(STATE_RESULT_DATA);
         }
+        InitInnerQueryResultReceiver();
+    }
 
+    private void InitInnerQueryResultReceiver() {
         // The filter's action is BROADCAST_ACTION
         IntentFilter statusIntentFilter = new IntentFilter(
                 Constants.BROADCAST_ACTION);
@@ -234,20 +235,9 @@ public class ScreenCaptureFragment extends Fragment implements View.OnClickListe
 
         if ( a != null ) {
             Intent service = new Intent(a, QueryIntentService.class);
+            service.putExtra("job", QueryIntentService_FetchDep);
             a.startService(service);
             mButtonShow.setEnabled(false);
-        }
-    }
-
-    private void fetchDepartments() {
-        try {
-            Connection mConnection = ERPConnectionFactory.GetConnection();
-            Statement stmt = mConnection.createStatement();
-            ResultSet rs = stmt.executeQuery("select depname from bdepartment");
-            while (rs.next()) {
-                Log.i(TAG, rs.getString("depname")); }
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
     }
 

@@ -16,6 +16,9 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 
+import static com.example.android.screencapture.Constants.QueryIntentService_FetchConstructor;
+import static com.example.android.screencapture.Constants.QueryIntentService_FetchDep;
+
 public class QueryIntentService extends IntentService {
     private static final String TAG = "QueryIntentService";
     private static final String QUERY_RESULT_KEY = "QueryResult";
@@ -37,31 +40,55 @@ public class QueryIntentService extends IntentService {
     @Override
     protected void onHandleIntent(@Nullable Intent intent) {
         synchronized (this) {
-            Intent localIntent =
-                    new Intent(Constants.BROADCAST_ACTION)
-                            // Puts the status into the Intent
-                            .putExtra(Constants.EXTENDED_DATA_STATUS, 0);
-            try {
-                try {
-                    Connection mConnection = ERPConnectionFactory.GetConnection();
-                    Statement stmt = mConnection.createStatement();
-                    String qry = "SELECT  DescriptionCN FROM    ConstructionApply";
-                    ResultSet rs = stmt.executeQuery(qry);
-                    //ResultSet rs = stmt.executeQuery("select depname from bdepartment");
-
-                    while (rs.next()) {
-                        Log.i(TAG, rs.getString("DescriptionCN"));
-                        ArrayList<String> strings = new ArrayList<>();
-                        strings.add(rs.getString("DescriptionCN"));
-                        localIntent.putStringArrayListExtra(QUERY_RESULT_KEY, strings);
-                    }
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                }
-            } catch (Exception e) {
+            String jobString = intent.getStringExtra("job");
+            switch (jobString)
+            {
+                case QueryIntentService_FetchDep:
+                    fetchDepartments();
+                    break;
+                case QueryIntentService_FetchConstructor:
+                    fetchConstructor();
+                    break;
             }
-            // Broadcasts the Intent to receivers in this app.
-            LocalBroadcastManager.getInstance(this).sendBroadcast(localIntent);
         }
+    }
+
+    private void fetchConstructor() {
+        String qry = "SELECT  DescriptionCN FROM    ConstructionApply";
+
+        ExecuteQueryAndBroadcast(qry);
+    }
+
+    private void fetchDepartments() {
+        String qry = "select depname from bdepartment";
+
+        ExecuteQueryAndBroadcast(qry);
+    }
+
+    private void ExecuteQueryAndBroadcast(String qry) {
+        Intent localIntent =
+                new Intent(Constants.BROADCAST_ACTION)
+                        // Puts the status into the Intent
+                        .putExtra(Constants.EXTENDED_DATA_STATUS, 0);
+        try {
+            try {
+                Connection mConnection = ERPConnectionFactory.GetConnection();
+                Statement stmt = mConnection.createStatement();
+
+                ResultSet rs = stmt.executeQuery(qry);
+
+                while (rs.next()) {
+                    Log.i(TAG, rs.getString("DescriptionCN"));
+                    ArrayList<String> strings = new ArrayList<>();
+                    strings.add(rs.getString("DescriptionCN"));
+                    localIntent.putStringArrayListExtra(QUERY_RESULT_KEY, strings);
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        } catch (Exception e) {
+        }
+        // Broadcasts the Intent to receivers in this app.
+        LocalBroadcastManager.getInstance(this).sendBroadcast(localIntent);
     }
 }
