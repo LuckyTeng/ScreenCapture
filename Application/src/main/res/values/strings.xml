@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!--
+<?xml version="1.0" encoding="utf-8"?><!--
 Copyright 2014 The Android Open Source Project
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -35,4 +34,6 @@ limitations under the License.
     </string>
     <string name="sample_action1">Action1</string>
     <string name="List">List</string>
+    <string name="title_activity_show_seri_result">ShowSeriResultActivity</string>
+    <string name="Button">Button</string>
 </resources>

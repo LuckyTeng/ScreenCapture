@@ -1,5 +1,6 @@
 package com.example.android.screencapture;
 
+import android.app.Activity;
 import android.app.ListActivity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -9,8 +10,10 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.android.common.logger.Log;
@@ -34,12 +37,27 @@ public class List1View extends ListActivity {
     }
 
     @Override
+    protected void onStart() {
+        super.onStart();
+    }
+
+    @Override
     protected void onListItemClick(ListView l, View v, int position, long id) {
         super.onListItemClick(l, v, position, id);
 
-        Toast.makeText(this, "id:" + id, Toast.LENGTH_SHORT).show();
+        TextView tv = (TextView)v;
+
+        Toast.makeText(this, tv.getText() + " id:" + id, Toast.LENGTH_SHORT).show();
     }
 
+    public static void showKeyBoard(Activity activity) {
+        InputMethodManager imm = (InputMethodManager) activity.getSystemService(Activity.INPUT_METHOD_SERVICE);
+        View view = activity.getCurrentFocus();
+        if (view == null) {
+            view = new View(activity);
+        }
+        imm.showSoftInputFromInputMethod(view.getWindowToken(), 0);
+    }
     private void InitInnerQueryResultReceiver() {
         // The filter's action is BROADCAST_ACTION
         IntentFilter statusIntentFilter = new IntentFilter(
@@ -71,6 +89,7 @@ public class List1View extends ListActivity {
 
         Log.i(TAG, "Resume");
         startFetchConstructorService();
+        showKeyBoard(this);
     }
 
     private void startFetchConstructorService() {
