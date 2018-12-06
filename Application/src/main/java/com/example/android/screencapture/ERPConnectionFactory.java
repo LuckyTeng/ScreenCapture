@@ -26,6 +26,8 @@ public class ERPConnectionFactory {
 //                    .permitAll().build();
 //            StrictMode.setThreadPolicy(policy);
 //        }
-        return DriverManager.getConnection("jdbc:jtds:sqlserver://192.168.18.77;instance=SQLEXPRESS;DatabaseName=CITEST;TDS=8.0", "lacty", "wu0g3tp6");
+//        return DriverManager.getConnection("jdbc:jtds:sqlserver://192.168.18.77;instance=SQLEXPRESS;DatabaseName=CITEST;TDS=8.0", "lacty", "wu0g3tp6");
+        return DriverManager.getConnection("jdbc:jtds:sqlserver://192.168.0.1;DatabaseName=LIY_ERP;TDS=8.0", "lacty", "wu0g3tp6");
+
     }
 }

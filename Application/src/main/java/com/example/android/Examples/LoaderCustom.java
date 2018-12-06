@@ -15,6 +15,9 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.content.res.Resources;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -33,9 +36,15 @@ import android.widget.SearchView.OnCloseListener;
 import android.widget.SearchView.OnQueryTextListener;
 import android.widget.TextView;
 
+import com.example.android.screencapture.ERPConnectionFactory;
 import com.example.android.screencapture.R;
 
 import java.io.File;
+import java.io.InputStream;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.text.Collator;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -118,6 +127,15 @@ public class LoaderCustom extends Activity {
                     mLabel = label != null ? label.toString() : mInfo.packageName;
                 }
             }
+        }
+
+        void setLabel(String label) {
+            mMounted = true;
+            mLabel = label;
+        }
+
+        void setIcon(Drawable d) {
+            mIcon = d;
         }
 
         private final AppListLoader mLoader;
@@ -218,15 +236,60 @@ public class LoaderCustom extends Activity {
                 apps = new ArrayList<>();
             }
 
-            final Context context = getContext();
+            List<String> mCons = new ArrayList<>();
+            List<Drawable> mDraws = new ArrayList<>();
+
+            Connection mConnection = null;
+            try {
+                mConnection = ERPConnectionFactory.GetConnection();
+                Statement stmt = mConnection.createStatement();
+
+                String qry =              "SELECT     DescriptionCN, ConstructionApply_Id, ApplyNo, "
+                        + "				(SELECT   TOP 1  DocThumb "
+                        + "			FROM         ConstructionApplyFiles "
+                        + "			WHERE     (DocKind = 0) AND (ConstructionApply_Id = ConstructionApply.ConstructionApply_Id) ) DocThumb "
+                        + "FROM         ConstructionApply ";
+
+                ResultSet rs = stmt.executeQuery(qry);
+
+                ArrayList<String> strings = new ArrayList<>();
+                while (rs.next()) {
+                    mCons.add(rs.getString("DescriptionCN"));
+                    InputStream is = rs.getBinaryStream("DocThumb");
+                    if ( is != null ) {
+                        try {
+                            Bitmap bitmap = BitmapFactory.decodeStream(is);
+                            bitmap.setDensity(Bitmap.DENSITY_NONE);
+                            Drawable d = new BitmapDrawable(bitmap);
+                            mDraws.add(d);
+                        } catch ( Exception e) {
+                            mDraws.add(null);
+                        }
+                    } else
+                        mDraws.add(null);
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+
 
             // Create corresponding array of entries and load their labels.
-            List<AppEntry> entries = new ArrayList<>(apps.size());
-            for (int i=0; i<apps.size(); i++) {
-                AppEntry entry = new AppEntry(this, apps.get(i));
-                entry.loadLabel(context);
+            List<AppEntry> entries = new ArrayList<>(mCons.size());
+            for (int i=0; i<mCons.size(); i++) {
+                AppEntry entry = new AppEntry(this, apps.get(0));
+                entry.setLabel(mCons.get(i));
+                entry.setIcon(mDraws.get(i));
                 entries.add(entry);
             }
+//            final Context context = getContext();
+//
+//            // Create corresponding array of entries and load their labels.
+//            List<AppEntry> entries = new ArrayList<>(apps.size());
+//            for (int i=0; i<apps.size(); i++) {
+//                AppEntry entry = new AppEntry(this, apps.get(i));
+//                entry.loadLabel(context);
+//                entries.add(entry);
+//            }
 
             // Sort the list.
             Collections.sort(entries, ALPHA_COMPARATOR);
