@@ -7,7 +7,6 @@ import android.support.annotation.Nullable;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -42,16 +41,23 @@ public class LoginActivity extends Activity {
             @Override
             public void onClick(View v) {
                 try {
-                    ResultSet rs = getLoginResultSet();
+                    mProgressBar.setVisibility(View.VISIBLE);
 
-                    if ( rs.next()) {
-                        Intent intent = new Intent(v.getContext(), MainActivity.class);
-                        startActivity(intent);
-                    } else {
-                        Toast.makeText(LoginActivity.this, "Login Fail!!!", Toast.LENGTH_SHORT).show();
-                    }
+                    wait(1000);
+                    Intent intent = new Intent(v.getContext(), MainActivity.class);
+                    startActivity(intent);
+//                    ResultSet rs = getLoginResultSet();
+//
+//                    if ( rs.next()) {
+//                        Intent intent = new Intent(v.getContext(), MainActivity.class);
+//                        startActivity(intent);
+//                    } else {
+//                        Toast.makeText(LoginActivity.this, "Login Fail!!!", Toast.LENGTH_SHORT).show();
+//                    }
 
-                } catch (SQLException e) {
+//                } catch (SQLException e) {
+//                    e.printStackTrace();
+                } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
             }
@@ -64,6 +70,7 @@ public class LoginActivity extends Activity {
     }
 
     private ResultSet getLoginResultSet() throws SQLException {
+        // TODO: 2018/12/07 Run in bind Service
         Connection connection = ERPConnectionFactory.GetConnection();
         CharSequence mail = mEmailView.getText();
         CharSequence password = mPasswordView.getText();
