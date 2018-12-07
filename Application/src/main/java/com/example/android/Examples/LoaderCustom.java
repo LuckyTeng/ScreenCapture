@@ -28,7 +28,6 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.SearchView;
@@ -37,6 +36,7 @@ import android.widget.SearchView.OnQueryTextListener;
 import android.widget.TextView;
 
 import com.example.android.screencapture.ERPConnectionFactory;
+import com.example.android.screencapture.FuzzyArrayAdapter;
 import com.example.android.screencapture.R;
 
 import java.io.File;
@@ -408,7 +408,7 @@ public class LoaderCustom extends Activity {
 //END_INCLUDE(loader)
 
     //BEGIN_INCLUDE(fragment)
-    public static class AppListAdapter extends ArrayAdapter<AppEntry> {
+    public static class AppListAdapter extends FuzzyArrayAdapter<AppEntry> {
         private final LayoutInflater mInflater;
 
         public AppListAdapter(Context context) {
@@ -509,6 +509,7 @@ public class LoaderCustom extends Activity {
             // Called when the action bar search text has changed.  Since this
             // is a simple array adapter, we can just have it do the filtering.
             mCurFilter = !TextUtils.isEmpty(newText) ? newText : null;
+
             mAdapter.getFilter().filter(mCurFilter);
             return true;
         }
