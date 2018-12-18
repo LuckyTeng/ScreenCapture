@@ -247,8 +247,8 @@ public class LoaderCustom extends Activity {
                 String qry =              "SELECT     DescriptionCN, ConstructionApply_Id, ApplyNo, "
                         + "				(SELECT   TOP 1  DocThumb "
                         + "			FROM         ConstructionApplyFiles "
-                        + "			WHERE     (DocKind = 0) AND (ConstructionApply_Id = ConstructionApply.ConstructionApply_Id) ) DocThumb "
-                        + "FROM         ConstructionApply ";
+                        + "			WHERE     (DocKind = 1) AND (ConstructionApply_Id = ConstructionApply.ConstructionApply_Id) ) DocThumb "
+                        + "FROM         ConstructionApply WHERE ProgressStatus in (0,1) ";
 
                 ResultSet rs = stmt.executeQuery(qry);
 
