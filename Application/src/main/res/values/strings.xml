@@ -37,4 +37,8 @@ limitations under the License.
     <string name="title_activity_show_seri_result">ShowSeriResultActivity</string>
     <string name="Button">Button</string>
     <string name="ClickMe">Click Me</string>
+    <string name="title_section1">section1</string>
+    <string name="title_section2">section2</string>
+    <string name="title_section3">section3</string>
+    <string name="Const">Const</string>
 </resources>

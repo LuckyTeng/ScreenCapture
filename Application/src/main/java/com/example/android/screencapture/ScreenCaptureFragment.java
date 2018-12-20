@@ -83,6 +83,7 @@ public class ScreenCaptureFragment extends Fragment implements View.OnClickListe
     private Button mButtonShow;
     private Button mButtonWindow;
     private Button mButtonShowList;
+    private Button mButtonConst;
     private SurfaceView mSurfaceView;
     private ImageReader mImageReader;
     private RenderScriptTask mRenderScriptTask;
@@ -136,11 +137,13 @@ public class ScreenCaptureFragment extends Fragment implements View.OnClickListe
         mButtonShow = view.findViewById(R.id.btnShow);
         mButtonWindow = view.findViewById(R.id.window);
         mButtonShowList = view.findViewById(R.id.btnShowList);
+        mButtonConst = view.findViewById(R.id.Constr);
 
         mButtonShow.setOnClickListener(this);
         mButtonToggle.setOnClickListener(this);
         mButtonWindow.setOnClickListener(this);
         mButtonShowList.setOnClickListener(this);
+        mButtonConst.setOnClickListener(this);
 
         Activity activity = getActivity();
         DisplayMetrics metrics = new DisplayMetrics();
@@ -202,7 +205,17 @@ public class ScreenCaptureFragment extends Fragment implements View.OnClickListe
             case R.id.btnShowList:
                 startList1View();
                 break;
+            case R.id.Constr:
+                startConstructionActivity();
+                break;
         }
+    }
+
+    private void startConstructionActivity() {
+        Activity a = getActivity();
+        if ( a== null) return;
+        Intent intent = new Intent(getActivity(), ConstructionActivity.class);
+        startActivity(intent);
     }
 
     private void startList1View() {
