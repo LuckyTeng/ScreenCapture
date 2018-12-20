@@ -2,11 +2,13 @@ package com.example.android.screencapture;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -40,26 +42,10 @@ public class LoginActivity extends Activity {
         mLoginView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                try {
-                    mProgressBar.setVisibility(View.VISIBLE);
+                if ( mProgressBar.getVisibility() == View.VISIBLE) return;
+                mProgressBar.setVisibility(View.VISIBLE);
 
-                    wait(1000);
-                    Intent intent = new Intent(v.getContext(), MainActivity.class);
-                    startActivity(intent);
-//                    ResultSet rs = getLoginResultSet();
-//
-//                    if ( rs.next()) {
-//                        Intent intent = new Intent(v.getContext(), MainActivity.class);
-//                        startActivity(intent);
-//                    } else {
-//                        Toast.makeText(LoginActivity.this, "Login Fail!!!", Toast.LENGTH_SHORT).show();
-//                    }
-
-//                } catch (SQLException e) {
-//                    e.printStackTrace();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+                new CheckLoginTask().execute(mEmailView.getText().toString(), mPasswordView.getText().toString());
             }
         });
     }
@@ -69,13 +55,37 @@ public class LoginActivity extends Activity {
         super.onStart();
     }
 
-    private ResultSet getLoginResultSet() throws SQLException {
-        // TODO: 2018/12/07 Run in bind Service
-        Connection connection = ERPConnectionFactory.GetConnection();
-        CharSequence mail = mEmailView.getText();
-        CharSequence password = mPasswordView.getText();
-        Statement stmt = connection.createStatement();
-        return stmt.executeQuery("SELECT 1 FROM Busers b WHERE b.USERID ='" + mail + "' AND b.PWD = '" + password + "'");
+    private class CheckLoginTask extends AsyncTask<String, Void, Boolean> {
+        /** The system calls this to perform work in a worker thread and
+         * delivers it the parameters given to AsyncTask.execute() */
+        protected Boolean doInBackground(String... rss) {
+            String email = rss[0];
+            String password = rss[1];
+            Connection connection = null;
+            try {
+                connection = ERPConnectionFactory.GetConnection();
+                Statement stmt = connection.createStatement();
+                ResultSet rs = stmt.executeQuery("SELECT 1 FROM Busers b WHERE b.USERID ='" + email + "' AND b.PWD = '" + password + "'");
+
+                return rs.next();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+
+            return false;
+        }
+
+        /** The system calls this to perform work in the UI thread and delivers
+         * the result from doInBackground() */
+        protected void onPostExecute(Boolean result) {
+            mProgressBar.setVisibility(View.GONE);
+            if ( result ) {
+                Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+                startActivity(intent);
+            }
+            else
+                Toast.makeText(LoginActivity.this, "Login Fail!!!", Toast.LENGTH_SHORT).show();
+        }
     }
 
     @Override
