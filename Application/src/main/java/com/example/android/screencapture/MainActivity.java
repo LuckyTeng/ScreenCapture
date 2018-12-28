@@ -18,7 +18,6 @@
 package com.example.android.screencapture;
 
 import android.content.Intent;
-import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.v4.app.FragmentTransaction;
@@ -43,7 +42,7 @@ public class MainActivity extends SampleActivityBase {
 
     public static final String TAG = "MainActivity";
 
-    static final int REQUEST_IMAGE_CAPTURE = 1;
+    static final int REQUEST_IMAGE_CAPTURE = 2;
 
     /*
      * Dispatch a take picture intent
@@ -134,13 +133,17 @@ public class MainActivity extends SampleActivityBase {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
-            Bundle extras = data.getExtras();
-            Bitmap imageBitmap = (Bitmap) extras.get("data");
-            android.util.Log.d(TAG, "onActivityResult: width:" + imageBitmap.getWidth());
-            return;
-        }
         // call super to pass to frames
-        super.onActivityResult(requestCode, resultCode, data);
+        if ( requestCode > 65535)
+            super.onActivityResult(requestCode, resultCode, data);
+        else if ( requestCode == REQUEST_IMAGE_CAPTURE)
+        {
+            android.support.v4.app.Fragment framgment = getSupportFragmentManager().findFragmentById(R.id.sample_content_fragment);
+
+            if (framgment != null) {
+                framgment.onActivityResult(requestCode, resultCode, data);
+                return;
+            }
+        }
     }
 }

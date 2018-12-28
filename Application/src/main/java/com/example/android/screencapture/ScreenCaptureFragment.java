@@ -40,6 +40,7 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.util.DisplayMetrics;
 import android.view.LayoutInflater;
 import android.view.Surface;
+import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
@@ -59,7 +60,7 @@ import static com.example.android.screencapture.Constants.QueryIntentService_Fet
 /**
  * Provides UI for the screen capture.
  */
-public class ScreenCaptureFragment extends Fragment implements View.OnClickListener {
+public class ScreenCaptureFragment extends Fragment implements View.OnClickListener, SurfaceHolder.Callback {
 
     private static final String TAG = "ScreenCaptureFragment";
 
@@ -69,6 +70,7 @@ public class ScreenCaptureFragment extends Fragment implements View.OnClickListe
     private static final String QUERY_RESULT_KEY = "QueryResult";
 
     private static final int REQUEST_MEDIA_PROJECTION = 1;
+    private static final int REQUEST_IMAGE_CAPTURE = 2;
 
     private int mScreenDensity;
 
@@ -87,6 +89,7 @@ public class ScreenCaptureFragment extends Fragment implements View.OnClickListe
     private SurfaceView mSurfaceView;
     private ImageReader mImageReader;
     private RenderScriptTask mRenderScriptTask;
+    private Bitmap mPhotoTaken;
 
     private int count;
     private int mClickId;
@@ -168,6 +171,8 @@ public class ScreenCaptureFragment extends Fragment implements View.OnClickListe
         mScreenDensity = metrics.densityDpi;
         mMediaProjectionManager = (MediaProjectionManager)
                 activity.getSystemService(Context.MEDIA_PROJECTION_SERVICE);
+
+        mSurfaceView.getHolder().addCallback(this);
     }
 
     @Override
@@ -274,6 +279,13 @@ public class ScreenCaptureFragment extends Fragment implements View.OnClickListe
                 startFloatingWindowService();
             }
         }
+        else if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == Activity.RESULT_OK) {
+            Bundle extras = data.getExtras();
+            Bitmap imageBitmap = (Bitmap) extras.get("data");
+            android.util.Log.d(TAG, "onActivityResult(REQUEST_IMAGE_CAPTURE): imageBitmap width:" + imageBitmap.getWidth() + " height:" + imageBitmap.getHeight());
+            mPhotoTaken = imageBitmap;
+            return;
+        }
     }
 
     @Override
@@ -285,12 +297,16 @@ public class ScreenCaptureFragment extends Fragment implements View.OnClickListe
     @Override
     public void onDestroy() {
         super.onDestroy();
+        stopFloatingWindow();
+        tearDownMediaProjection();
+    }
+
+    private void stopFloatingWindow() {
         FragmentActivity a = getActivity();
         if ( a != null ) {
             Intent service = new Intent(a, FloatingWindow.class);
             a.stopService(service);
         }
-        tearDownMediaProjection();
     }
 
     private void setUpMediaProjection() {
@@ -349,6 +365,30 @@ public class ScreenCaptureFragment extends Fragment implements View.OnClickListe
 
         mRenderScriptTask = new RenderScriptTask();
         mRenderScriptTask.execute();
+    }
+
+    @Override
+    public void surfaceCreated(SurfaceHolder holder) {
+        if (mPhotoTaken != null) {
+            Canvas canvas = holder.lockCanvas();
+            try {
+                canvas.drawBitmap(mPhotoTaken, 0, 0, null);
+            }
+            finally {
+                mSurfaceView.getHolder().unlockCanvasAndPost(canvas);
+            }
+            mPhotoTaken = null;
+        }
+    }
+
+    @Override
+    public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+
+    }
+
+    @Override
+    public void surfaceDestroyed(SurfaceHolder holder) {
+
     }
 
     private class RenderScriptTask extends AsyncTask<Float, Integer, Integer> {
