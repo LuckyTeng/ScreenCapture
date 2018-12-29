@@ -16,6 +16,7 @@
 
 package com.example.android.screencapture;
 
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -30,9 +31,12 @@ import android.media.Image;
 import android.media.ImageReader;
 import android.media.projection.MediaProjection;
 import android.media.projection.MediaProjectionManager;
+import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.provider.Settings;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
@@ -67,10 +71,9 @@ public class ScreenCaptureFragment extends Fragment implements View.OnClickListe
     private static final String STATE_RESULT_CODE = "result_code";
     private static final String STATE_RESULT_DATA = "result_data";
 
-    private static final String QUERY_RESULT_KEY = "QueryResult";
-
     private static final int REQUEST_MEDIA_PROJECTION = 1;
     private static final int REQUEST_IMAGE_CAPTURE = 2;
+    private static final int REQUEST_OVERLAY_DRAW = 3;
 
     private int mScreenDensity;
 
@@ -93,7 +96,6 @@ public class ScreenCaptureFragment extends Fragment implements View.OnClickListe
 
     private int count;
     private int mClickId;
-
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -234,6 +236,7 @@ public class ScreenCaptureFragment extends Fragment implements View.OnClickListe
         Activity a = getActivity();
         Log.i(TAG, "startFloatingWindowService");
         // This initiates a prompt dialog for the user to confirm screen projection.
+        checkDrawOverlayPermission();
 
         if ( a != null && mResultCode != 0) {
             Intent service = new Intent(a, FloatingWindow.class);
@@ -257,6 +260,25 @@ public class ScreenCaptureFragment extends Fragment implements View.OnClickListe
         }
     }
 
+    @TargetApi(23)
+    public void checkDrawOverlayPermission() {
+        if ( Build.VERSION.SDK_INT > 21 ) {
+            Activity activity = getActivity();
+            if (activity == null) {
+                return;
+            }
+            /** check if we already  have permission to draw over other apps */
+            if (!Settings.canDrawOverlays(activity)) {
+                /** if not construct intent to request permission */
+                Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                        Uri.parse("package:" + activity.getPackageName()));
+                /** request permission via start activity for result */
+                startActivityForResult(intent, REQUEST_OVERLAY_DRAW);
+            }
+        }
+    }
+
+    @TargetApi(23)
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == REQUEST_MEDIA_PROJECTION) {
@@ -278,8 +300,17 @@ public class ScreenCaptureFragment extends Fragment implements View.OnClickListe
             } else if ( mClickId == R.id.window) {
                 startFloatingWindowService();
             }
-        }
-        else if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == Activity.RESULT_OK) {
+        } else if (requestCode == REQUEST_OVERLAY_DRAW) {
+            Activity activity = getActivity();
+            if (activity == null) {
+                return;
+            }
+            if (Build.VERSION.SDK_INT > 21) {
+                if (Settings.canDrawOverlays(activity)) {
+                    // continue here - permission was granted
+                }
+            }
+        } else if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == Activity.RESULT_OK) {
             Bundle extras = data.getExtras();
             Bitmap imageBitmap = (Bitmap) extras.get("data");
             android.util.Log.d(TAG, "onActivityResult(REQUEST_IMAGE_CAPTURE): imageBitmap width:" + imageBitmap.getWidth() + " height:" + imageBitmap.getHeight());

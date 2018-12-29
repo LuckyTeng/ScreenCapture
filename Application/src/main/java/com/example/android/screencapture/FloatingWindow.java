@@ -95,10 +95,9 @@ public class FloatingWindow extends Service {
 
         _wm = (WindowManager)getSystemService(WINDOW_SERVICE);
         _ll = new LinearLayout(this);
+        _ll.setBackgroundColor(Color.argb(66,255,0,0));
 
         LinearLayout.LayoutParams llp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT);
-
-        _ll.setBackgroundColor(Color.argb(66,255,0,0));
         _ll.setLayoutParams(llp);
 
         _stop = new Button(this);
@@ -117,7 +116,7 @@ public class FloatingWindow extends Service {
         mSurfaceView.setLayoutParams(ivParameters);
 //        _imageView.setLayoutParams(ivParameters);
 
-        Log.i(TAG, "mSurfaceView Width:" + mSurfaceView.getWidth());
+        Log.i(TAG, "mSurfaceView Surfae isValid:" + mSurfaceView.getHolder().getSurface().isValid());
 
         final WindowManager.LayoutParams parameters = new WindowManager.LayoutParams(220, 450,WindowManager.LayoutParams.TYPE_PHONE, WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
                 PixelFormat.TRANSLUCENT);
@@ -129,7 +128,11 @@ public class FloatingWindow extends Service {
         _ll.addView(_stop);
         _ll.addView(mSurfaceView);
 //        _ll.addView(_imageView);
-        _wm.addView(_ll, parameters);
+        try {
+            _wm.addView(_ll, parameters);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         DisplayMetrics metrics = new DisplayMetrics();
         _wm.getDefaultDisplay().getMetrics(metrics);
